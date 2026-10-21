@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { scenes, chapters, recommendations, type GameScene, type Choice } from './gameData';
+import { miniGames, type MiniGame } from './miniGames';
+import { MiniGameComponent } from './MiniGameComponent';
 
-type GameState = 'start' | 'chapter-intro' | 'playing' | 'feedback' | 'chapter-end' | 'results';
+type GameState = 'start' | 'chapter-intro' | 'playing' | 'feedback' | 'minigame' | 'results';
 
 interface Scores {
   economy: number;
@@ -19,6 +21,9 @@ function App() {
   const [textRevealed, setTextRevealed] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [totalScenesCompleted, setTotalScenesCompleted] = useState(0);
+  const [currentMiniGame, setCurrentMiniGame] = useState<MiniGame | null>(null);
+  const [completedMiniGames, setCompletedMiniGames] = useState<string[]>([]);
+  const [miniGameResults, setMiniGameResults] = useState<Record<string, { score: number; max: number }>>({});
 
   const currentScene: GameScene | undefined = scenes[currentSceneIndex];
 
@@ -37,7 +42,7 @@ function App() {
           clearInterval(interval);
           setTextRevealed(true);
         }
-      }, 20);
+      }, 18);
       return () => clearInterval(interval);
     }
   }, [gameState, currentSceneIndex]);
@@ -80,6 +85,12 @@ function App() {
     setTimeout(() => setFadeIn(true), 50);
   };
 
+  // Check if a mini-game should be shown after current scene
+  const getMiniGameForChapter = (chapterNum: number): MiniGame | null => {
+    const mg = miniGames.find(m => m.afterChapter === chapterNum && !completedMiniGames.includes(m.id));
+    return mg || null;
+  };
+
   const nextScene = () => {
     const nextIndex = currentSceneIndex + 1;
     
@@ -90,11 +101,21 @@ function App() {
       return;
     }
 
-    const nextScene = scenes[nextIndex];
+    const nextSceneData = scenes[nextIndex];
     
-    // Check if we need to show chapter intro
-    if (nextScene.chapter !== currentChapter) {
-      setCurrentChapter(nextScene.chapter);
+    // Check if we're transitioning to a new chapter
+    if (nextSceneData.chapter !== currentChapter) {
+      // Check if there's a mini-game for the completed chapter
+      const mg = getMiniGameForChapter(currentChapter);
+      if (mg) {
+        setCurrentMiniGame(mg);
+        setGameState('minigame');
+        setFadeIn(false);
+        setTimeout(() => setFadeIn(true), 50);
+        return;
+      }
+      
+      setCurrentChapter(nextSceneData.chapter);
       setGameState('chapter-intro');
       setFadeIn(false);
       setTimeout(() => setFadeIn(true), 50);
@@ -104,6 +125,40 @@ function App() {
       setFadeIn(false);
       setTimeout(() => setFadeIn(true), 50);
     }
+  };
+
+  // Handle mini-game completion
+  const handleMiniGameComplete = (score: number, maxScore: number) => {
+    if (currentMiniGame) {
+      setCompletedMiniGames(prev => [...prev, currentMiniGame.id]);
+      setMiniGameResults(prev => ({ ...prev, [currentMiniGame.id]: { score, max: maxScore } }));
+      
+      // Apply score effects
+      const ratio = score / maxScore;
+      let bonus: number;
+      if (ratio >= 0.8) bonus = 8;
+      else if (ratio >= 0.5) bonus = 4;
+      else bonus = -3;
+
+      setScores(prev => ({
+        economy: Math.max(0, Math.min(100, prev.economy + bonus)),
+        trust: Math.max(0, Math.min(100, prev.trust + bonus)),
+        political: Math.max(0, Math.min(100, prev.political + bonus)),
+      }));
+    }
+    
+    // Now move to chapter intro or next scene
+    const nextIndex = currentSceneIndex + 1;
+    if (nextIndex < scenes.length) {
+      const nextSceneData = scenes[nextIndex];
+      setCurrentChapter(nextSceneData.chapter);
+      setCurrentSceneIndex(nextIndex);
+      setGameState('chapter-intro');
+    } else {
+      setGameState('results');
+    }
+    setFadeIn(false);
+    setTimeout(() => setFadeIn(true), 50);
   };
 
   const getRecommendation = () => {
@@ -133,10 +188,41 @@ function App() {
     setScores({ economy: 50, trust: 50, political: 50 });
     setLastChoice(null);
     setTotalScenesCompleted(0);
+    setCurrentMiniGame(null);
+    setCompletedMiniGames([]);
+    setMiniGameResults({});
   };
 
-  // === RENDER SCREENS ===
+  // === RENDER SCORES BAR ===
+  const renderScoresBar = () => (
+    <div className="bg-gray-800/80 border-b border-gray-700 p-3 sticky top-0 z-10 backdrop-blur-sm">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-amber-400 text-sm font-semibold">
+            Глава {currentScene?.chapter || currentChapter}: {chapters.find(c => c.number === (currentScene?.chapter || currentChapter))?.title}
+          </span>
+          <span className="text-gray-400 text-xs">
+            {getProgressPercent()}% пройдено
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <ScoreBar label="💰 Экономика" value={scores.economy} color="bg-green-500" />
+          <ScoreBar label="🤝 Доверие" value={scores.trust} color="bg-blue-500" />
+          <ScoreBar label="🏛️ Политика" value={scores.political} color="bg-purple-500" />
+        </div>
+        <div className="mt-2">
+          <div className="w-full bg-gray-700 rounded-full h-1.5">
+            <div 
+              className="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
+              style={{ width: `${getProgressPercent()}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
+  // === START SCREEN ===
   if (gameState === 'start') {
     return (
       <div className={`min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4 transition-opacity duration-700 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
@@ -161,13 +247,26 @@ function App() {
             </p>
             <p className="text-gray-300 leading-relaxed mb-4">
               <span className="text-amber-400 font-semibold">Ваша роль:</span> молодой советник президента Франклина Д. Рузвельта. 
-              Вы будете принимать решения, определяющие судьбу нации. Ваши действия повлияют на экономику, 
-              доверие народа и политический капитал президента.
+              Вы будете принимать решения, определяющие судьбу нации, проходить мини-игры на знание истории 
+              и влиять на три ключевых показателя.
             </p>
             <div className="border-t border-gray-700 pt-4 mt-4">
-              <p className="text-gray-400 text-sm">
-                📊 Три шкалы прогресса будут отслеживать ваши решения:<br/>
-                💰 Экономика • 🤝 Доверие народа • 🏛️ Политический капитал
+              <p className="text-gray-400 text-sm mb-2">
+                📊 Три шкалы прогресса будут отслеживать ваши решения:
+              </p>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="bg-green-900/20 border border-green-700/30 rounded p-2">
+                  <span className="text-green-400">💰 Экономика</span>
+                </div>
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded p-2">
+                  <span className="text-blue-400">🤝 Доверие народа</span>
+                </div>
+                <div className="bg-purple-900/20 border border-purple-700/30 rounded p-2">
+                  <span className="text-purple-400">🏛️ Политический капитал</span>
+                </div>
+              </div>
+              <p className="text-gray-500 text-xs mt-3">
+                🎮 Между главами вас ждут мини-игры на проверку знаний — они тоже влияют на прогресс!
               </p>
             </div>
           </div>
@@ -180,13 +279,14 @@ function App() {
           </button>
           
           <p className="text-gray-500 text-xs mt-4">
-            ⏱ Примерное время прохождения: 30-35 минут
+            ⏱ Примерное время прохождения: 30-35 минут • 5 глав • 15 сцен • 5 мини-игр
           </p>
         </div>
       </div>
     );
   }
 
+  // === CHAPTER INTRO ===
   if (gameState === 'chapter-intro') {
     const chapter = chapters.find(c => c.number === currentChapter);
     return (
@@ -224,49 +324,34 @@ function App() {
             </div>
           </div>
 
+          {/* Chapter progress dots */}
+          <div className="flex justify-center gap-2 mb-6">
+            {chapters.map(ch => (
+              <div key={ch.number} className={`w-3 h-3 rounded-full ${
+                ch.number < currentChapter ? 'bg-amber-400' : 
+                ch.number === currentChapter ? 'bg-amber-400 ring-2 ring-amber-400/50' : 
+                'bg-gray-600'
+              }`} />
+            ))}
+          </div>
+
           <button
             onClick={startChapter}
             className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-10 rounded-lg text-lg transition-all duration-300 transform hover:scale-105"
           >
-            Продолжить →
+            Начать главу →
           </button>
         </div>
       </div>
     );
   }
 
+  // === PLAYING (SCENE) ===
   if (gameState === 'playing' && currentScene) {
     return (
       <div className={`min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col transition-opacity duration-700 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Top bar with scores */}
-        <div className="bg-gray-800/80 border-b border-gray-700 p-3 sticky top-0 z-10">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-amber-400 text-sm font-semibold">
-                Глава {currentScene.chapter}: {chapters.find(c => c.number === currentScene.chapter)?.title}
-              </span>
-              <span className="text-gray-400 text-xs">
-                Сцена {currentSceneIndex + 1} из {scenes.length}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <ScoreBar label="💰 Экономика" value={scores.economy} color="bg-green-500" />
-              <ScoreBar label="🤝 Доверие" value={scores.trust} color="bg-blue-500" />
-              <ScoreBar label="🏛️ Политика" value={scores.political} color="bg-purple-500" />
-            </div>
-            {/* Overall progress */}
-            <div className="mt-2">
-              <div className="w-full bg-gray-700 rounded-full h-1.5">
-                <div 
-                  className="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${getProgressPercent()}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {renderScoresBar()}
 
-        {/* Main content */}
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="max-w-3xl w-full">
             <h3 className="text-xl text-amber-400 font-semibold mb-4 font-serif">
@@ -318,37 +403,12 @@ function App() {
     );
   }
 
+  // === FEEDBACK ===
   if (gameState === 'feedback' && lastChoice) {
     return (
       <div className={`min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col transition-opacity duration-700 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Top bar with scores */}
-        <div className="bg-gray-800/80 border-b border-gray-700 p-3 sticky top-0 z-10">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-amber-400 text-sm font-semibold">
-                Глава {currentScene?.chapter}: {chapters.find(c => c.number === currentScene?.chapter)?.title}
-              </span>
-              <span className="text-gray-400 text-xs">
-                Сцена {currentSceneIndex + 1} из {scenes.length}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <ScoreBar label="💰 Экономика" value={scores.economy} color="bg-green-500" />
-              <ScoreBar label="🤝 Доверие" value={scores.trust} color="bg-blue-500" />
-              <ScoreBar label="🏛️ Политика" value={scores.political} color="bg-purple-500" />
-            </div>
-            <div className="mt-2">
-              <div className="w-full bg-gray-700 rounded-full h-1.5">
-                <div 
-                  className="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${getProgressPercent()}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {renderScoresBar()}
 
-        {/* Feedback content */}
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="max-w-3xl w-full">
             <h3 className="text-xl text-amber-400 font-semibold mb-4 font-serif">
@@ -360,7 +420,6 @@ function App() {
                 {lastChoice.feedback}
               </p>
 
-              {/* Effects display */}
               <div className="border-t border-gray-700 pt-4">
                 <p className="text-gray-400 text-sm mb-3 font-semibold">Влияние на показатели:</p>
                 <div className="grid grid-cols-3 gap-4">
@@ -383,6 +442,36 @@ function App() {
     );
   }
 
+  // === MINI-GAME ===
+  if (gameState === 'minigame' && currentMiniGame) {
+    return (
+      <div className={`min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col transition-opacity duration-700 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
+        {renderScoresBar()}
+
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-3xl w-full">
+            <div className="text-center mb-6">
+              <div className="inline-block bg-amber-900/30 border border-amber-600/50 rounded-full px-4 py-1 mb-3">
+                <span className="text-amber-400 text-sm font-semibold">🎮 Мини-игра</span>
+              </div>
+              <h3 className="text-2xl text-white font-semibold font-serif">
+                {currentMiniGame.title}
+              </h3>
+            </div>
+            
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+              <MiniGameComponent 
+                game={currentMiniGame} 
+                onComplete={handleMiniGameComplete}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // === RESULTS ===
   if (gameState === 'results') {
     const recommendation = getRecommendation();
     const grade = getOverallGrade();
@@ -417,6 +506,27 @@ function App() {
               </div>
             </div>
           </div>
+
+          {/* Mini-game results */}
+          {Object.keys(miniGameResults).length > 0 && (
+            <div className="bg-gray-800/50 rounded-xl p-6 mb-6 border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4">🎮 Результаты мини-игр:</h3>
+              <div className="space-y-2">
+                {Object.entries(miniGameResults).map(([id, result]) => {
+                  const mg = miniGames.find(m => m.id === id);
+                  const percent = Math.round((result.score / result.max) * 100);
+                  return (
+                    <div key={id} className="flex justify-between items-center bg-gray-700/30 rounded-lg p-3">
+                      <span className="text-gray-300 text-sm">{mg?.title.replace(/[📅🔍🔗✏️✅]\s?/, '')}</span>
+                      <span className={`font-bold text-sm ${percent >= 80 ? 'text-green-400' : percent >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                        {result.score}/{result.max} ({percent}%)
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Recommendation */}
           <div className="bg-gray-800/50 rounded-xl p-6 mb-6 border border-gray-700">
