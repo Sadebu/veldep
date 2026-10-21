@@ -39,7 +39,6 @@ function App() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [scores, setScores] = useState<Scores>({ economy: 40, trust: 40, political: 40 });
   const [lastChoice, setLastChoice] = useState<Choice | null>(null);
-  const [lastChoiceIndex, setLastChoiceIndex] = useState<number>(0);
   const [fadeIn, setFadeIn] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [totalScenesCompleted, setTotalScenesCompleted] = useState(0);
@@ -65,14 +64,32 @@ function App() {
 
 
   // Скачивание игры как автономного HTML-файла
-  const downloadGame = () => {
+  const downloadGame = async () => {
     try {
       console.log('Скачиваем автономный HTML файл...');
       
-      // Получаем текущий HTML документа (работает даже при открытии через file://)
-      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      // Пытаемся загрузить оригинальный HTML файл через fetch
+      let html: string;
       
-      console.log('HTML получен, размер:', html.length);
+      try {
+        const response = await fetch(window.location.href, {
+          cache: 'no-cache',
+          headers: {
+            'Accept': 'text/html'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        html = await response.text();
+        console.log('HTML загружен через fetch, размер:', html.length);
+      } catch (fetchError) {
+        console.warn('Не удалось загрузить через fetch, используем DOM:', fetchError);
+        // Если fetch не работает (например, file:// протокол), используем DOM
+        html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      }
       
       // Создаём Blob и скачиваем
       const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -116,7 +133,6 @@ function App() {
 
   const handleChoice = (choice: Choice, choiceIndex: number) => {
     setLastChoice(choice);
-    setLastChoiceIndex(choiceIndex);
     
     const scaleEffect = (value: number, currentScore: number) => {
       if (value > 0) {
@@ -363,7 +379,6 @@ function App() {
     setCurrentChapter(1);
     setScores({ economy: 40, trust: 40, political: 40 });
     setLastChoice(null);
-    setLastChoiceIndex(0);
     setTotalScenesCompleted(0);
     setCurrentMiniGame(null);
     setCompletedMiniGames([]);
