@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { scenes, chapters, recommendations, type GameScene, type Choice } from './gameData';
 import { miniGames, type MiniGame } from './miniGames';
 import { MiniGameComponent } from './MiniGameComponent';
@@ -41,7 +41,6 @@ function App() {
   const [lastChoice, setLastChoice] = useState<Choice | null>(null);
   const [lastChoiceIndex, setLastChoiceIndex] = useState<number>(0);
   const [fadeIn, setFadeIn] = useState(false);
-  const [textRevealed, setTextRevealed] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [totalScenesCompleted, setTotalScenesCompleted] = useState(0);
   const [currentMiniGame, setCurrentMiniGame] = useState<MiniGame | null>(null);
@@ -55,20 +54,7 @@ function App() {
 
   useEffect(() => {
     if (gameState === 'playing' && currentScene) {
-      setTextRevealed(false);
-      setDisplayedText('');
-      let i = 0;
-      const text = currentScene.narrative;
-      const interval = setInterval(() => {
-        if (i < text.length) {
-          setDisplayedText(text.substring(0, i + 1));
-          i++;
-        } else {
-          clearInterval(interval);
-          setTextRevealed(true);
-        }
-      }, 18);
-      return () => clearInterval(interval);
+      setDisplayedText(currentScene.narrative);
     }
   }, [gameState, currentSceneIndex]);
 
@@ -76,66 +62,87 @@ function App() {
     setFadeIn(true);
   }, [gameState, currentSceneIndex]);
 
-  const skipText = useCallback(() => {
-    if (currentScene && !textRevealed) {
-      setDisplayedText(currentScene.narrative);
-      setTextRevealed(true);
-    }
-  }, [currentScene, textRevealed]);
 
-  // Скачивание игры как автономного HTML файла
+
+  // Скачивание игры как ZIP-архива
   const downloadGame = async () => {
     try {
-      let allCss = '';
+      const JSZip = (await import('jszip')).default;
+      const { saveAs } = await import('file-saver');
+      
+      const zip = new JSZip();
+      
+      // Загружаем index.html
+      const htmlResponse = await fetch(window.location.href);
+      const html = await htmlResponse.text();
+      zip.file('index.html', html);
+      
+      // Загружаем все CSS файлы
       const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
       for (const link of styleLinks) {
         try {
-          const response = await fetch((link as HTMLLinkElement).href);
-          allCss += await response.text() + '\n';
+          const href = (link as HTMLLinkElement).href;
+          const cssResponse = await fetch(href);
+          const css = await cssResponse.text();
+          const filename = href.split('/').pop() || 'style.css';
+          zip.file(`assets/${filename}`, css);
         } catch (e) {
           console.warn('Не удалось загрузить CSS:', link);
         }
       }
       
-      const inlineStyles = Array.from(document.querySelectorAll('style'));
-      inlineStyles.forEach(style => {
-        allCss += style.textContent + '\n';
-      });
-      
-      let allJs = '';
+      // Загружаем все JS файлы
       const scripts = Array.from(document.querySelectorAll('script[src]'));
       for (const script of scripts) {
         try {
-          const response = await fetch((script as HTMLScriptElement).src);
-          allJs += await response.text() + '\n';
+          const src = (script as HTMLScriptElement).src;
+          const jsResponse = await fetch(src);
+          const js = await jsResponse.text();
+          const filename = src.split('/').pop() || 'script.js';
+          zip.file(`assets/${filename}`, js);
         } catch (e) {
           console.warn('Не удалось загрузить JS:', script);
         }
       }
       
-      const standaloneHtml = `<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Великая Депрессия: Советник Президента</title>
-  <style>${allCss}</style>
-</head>
-<body>
-  <div id="root"></div>
-  <script>${allJs}</script>
-</body>
-</html>`;
+      // Создаём README с инструкцией
+      const readme = `# Великая Депрессия: Советник Президента
+
+## Как запустить игру локально:
+
+### Вариант 1: Простой запуск
+1. Откройте файл \`index.html\` в любом современном браузере (Chrome, Firefox, Edge, Safari)
+2. Игра запустится автоматически
+
+### Вариант 2: Локальный сервер (рекомендуется)
+1. Откройте терминал/командную строку в этой папке
+2. Запустите одну из команд:
+   - Python 3: \`python -m http.server 8000\`
+   - Python 2: \`python -m SimpleHTTPServer 8000\`
+   - Node.js: \`npx serve\`
+3. Откройте в браузере: \`http://localhost:8000\`
+
+## Требования:
+- Современный браузер с поддержкой JavaScript
+- Интернет не требуется (все ресурсы включены в архив)
+
+## Панель учителя:
+- Нажмите "🔐 Панель учителя" на главном экране
+- Пароль: teacher1933
+
+## Результаты учеников:
+- Результаты сохраняются в localStorage браузера
+- Ученики могут скачать результаты в HTML формате
+- Учитель может просмотреть все результаты в панели учителя
+
+---
+Создано для образовательных целей
+`;
+      zip.file('README.md', readme);
       
-      const blob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Великая_Депрессия_Игра.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Генерируем ZIP
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, 'Великая_Депрессия_Игра.zip');
     } catch (error) {
       console.error('Ошибка при скачивании:', error);
       alert('Не удалось скачать игру. Попробуйте обновить страницу и повторить попытку.');
@@ -479,7 +486,7 @@ function App() {
           
           <div className="mt-6 flex flex-col items-center gap-2">
             <button onClick={() => setGameState('teacher')} className="text-gray-500 hover:text-gray-300 text-sm transition-all">🔐 Панель учителя</button>
-            <button onClick={downloadGame} className="text-gray-500 hover:text-gray-300 text-sm transition-all">📥 Скачать игру (HTML)</button>
+            <button onClick={downloadGame} className="text-gray-500 hover:text-gray-300 text-sm transition-all">📥 Скачать игру (ZIP-архив)</button>
             <p className="text-gray-600 text-xs">⏱ Примерное время: 30-35 минут • 5 глав • 15 сцен • 5 мини-игр</p>
           </div>
         </div>
@@ -561,20 +568,17 @@ function App() {
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="max-w-3xl w-full">
             <h3 className="text-xl text-amber-400 font-semibold mb-4 font-serif">{currentScene.title}</h3>
-            <div className="bg-gray-800/50 rounded-xl p-6 mb-6 border border-gray-700 cursor-pointer" onClick={skipText}>
+            <div className="bg-gray-800/50 rounded-xl p-6 mb-6 border border-gray-700">
               <p className="text-gray-200 leading-relaxed text-lg whitespace-pre-line">
                 {displayedText}
-                {!textRevealed && <span className="animate-pulse text-amber-400">▊</span>}
               </p>
-              {!textRevealed && <p className="text-gray-500 text-xs mt-3 italic">Нажмите, чтобы пропустить анимацию текста</p>}
             </div>
-            {currentScene.historicalNote && textRevealed && (
+            {currentScene.historicalNote && (
               <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-4 mb-6">
                 <p className="text-amber-300 text-sm"><span className="font-bold">📖 Историческая справка:</span> {currentScene.historicalNote}</p>
               </div>
             )}
-            {textRevealed && (
-              <div className="space-y-3">
+            <div className="space-y-3">
                 <p className="text-gray-400 text-sm font-semibold uppercase tracking-wide mb-3">Ваш выбор:</p>
                 {currentScene.choices.map((choice, index) => (
                   <button key={index} onClick={() => handleChoice(choice, index)} className="w-full text-left bg-gray-700/50 hover:bg-gray-700 border border-gray-600 hover:border-amber-500 rounded-lg p-4 transition-all duration-200 group">
@@ -582,7 +586,6 @@ function App() {
                   </button>
                 ))}
               </div>
-            )}
           </div>
         </div>
       </div>
