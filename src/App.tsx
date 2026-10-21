@@ -84,6 +84,238 @@ function App() {
     }
   }, [currentScene, textRevealed]);
 
+  const downloadGame = () => {
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Инструкция - Великая Депрессия: Советник Президента</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+    }
+    .container {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    h1 {
+      color: #fbbf24;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #9ca3af;
+      margin-bottom: 30px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section-title {
+      color: #fbbf24;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+    .step {
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 3px solid #fbbf24;
+    }
+    .step-number {
+      color: #fbbf24;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .warning {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .warning-title {
+      color: #ef4444;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .info-title {
+      color: #3b82f6;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    code {
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    li {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏛️ Великая Депрессия: Советник Президента</h1>
+    <div class="subtitle">Инструкция для учителя по использованию игры</div>
+    
+    <div class="section">
+      <div class="section-title">📋 О игре</div>
+      <p>Интерактивная историческая игра для 10 класса по теме "Великая депрессия. Преобразования Ф. Рузвельта в США".</p>
+      <ul>
+        <li><strong>Время прохождения:</strong> 30-35 минут</li>
+        <li><strong>Структура:</strong> 5 глав, 15 сцен, 5 мини-игр</li>
+        <li><strong>Тип:</strong> Сюжетная игра с выбором решений</li>
+        <li><strong>Оценивание:</strong> Автоматическое (2-5)</li>
+      </ul>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">🚀 Как использовать игру</div>
+      
+      <div class="step">
+        <div class="step-number">Шаг 1: Доступ к игре</div>
+        <p>Игра доступна по ссылке, предоставленной учителем. Ученики могут проходить игру на компьютерах, планшетах или смартфонах.</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">Шаг 2: Регистрация ученика</div>
+        <p>В начале игры ученик вводит:</p>
+        <ul>
+          <li>Фамилию и имя</li>
+          <li>Класс (например, 10А)</li>
+        </ul>
+        <p>Эти данные сохраняются вместе с результатами.</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">Шаг 3: Прохождение игры</div>
+        <p>Ученик проходит 5 глав, принимая решения в роли советника президента Рузвельта. Между главами - мини-игры на проверку знаний.</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">Шаг 4: Получение результатов</div>
+        <p>В конце игры ученик видит:</p>
+        <ul>
+          <li>Оценку (2-5)</li>
+          <li>Три показателя: Экономика, Доверие, Политика</li>
+          <li>Статистику правильных/неправильных ответов</li>
+          <li>Персональные рекомендации</li>
+        </ul>
+        <p>Ученик может <strong>скачать результаты в HTML формате</strong> для отправки учителю.</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📊 Панель учителя</div>
+      <p>Для доступа к панели учителя:</p>
+      <ol>
+        <li>На главном экране нажмите <strong>"🔐 Панель учителя"</strong></li>
+        <li>Введите пароль: <code>teacher1933</code></li>
+      </ol>
+      <p>В панели учителя доступны:</p>
+      <ul>
+        <li><strong>Результаты учеников</strong> - таблица со всеми прохождениями</li>
+        <li><strong>Правильные ответы</strong> - все ответы с пояснениями</li>
+        <li><strong>Статистика</strong> - распределение оценок, средние показатели</li>
+        <li><strong>Модерирование</strong> - удаление результатов, экспорт в JSON</li>
+      </ul>
+    </div>
+    
+    <div class="warning">
+      <div class="warning-title">⚠️ Важно: Хранение результатов</div>
+      <p>Результаты хранятся в <strong>localStorage</strong> браузера. Это означает:</p>
+      <ul>
+        <li>Результаты сохраняются только в том браузере, где проходила игра</li>
+        <li>При очистке кэша браузера результаты будут удалены</li>
+        <li>Результаты не синхронизируются между устройствами</li>
+      </ul>
+      <p><strong>Рекомендация:</strong> Попросите учеников скачивать результаты в HTML формате и отправлять их вам по электронной почте или через облачное хранилище.</p>
+    </div>
+    
+    <div class="info">
+      <div class="info-title">💡 Советы для учителя</div>
+      <ul>
+        <li>Проведите игру в компьютерном классе или попросите учеников пройти дома</li>
+        <li>После игры обсудите результаты в классе</li>
+        <li>Используйте вкладку "Правильные ответы" для подготовки к обсуждению</li>
+        <li>Обратите внимание на "Самые сложные сцены" в статистике - это темы, которые нужно повторить</li>
+        <li>Пароль панели учителя можно изменить в коде игры (переменная <code>TEACHER_PASSWORD</code>)</li>
+      </ul>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📚 Содержание игры</div>
+      <p><strong>Глава 1: Чёрный четверг</strong> - крах на Уолл-стрит 1929 года</p>
+      <p><strong>Глава 2: Четыре года страданий</strong> - жизнь во время Великой депрессии</p>
+      <p><strong>Глава 3: Новый курс</strong> - первые 100 дней Рузвельта</p>
+      <p><strong>Глава 4: Битва за реформы</strong> - реализация и сопротивление</p>
+      <p><strong>Глава 5: Итоги эпохи</strong> - оценка наследия Нового курса</p>
+      <p><strong>Мини-игры:</strong> хронология, соответствие, поиск лишнего, заполнение пропусков, верно/неверно</p>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">🎯 Система оценивания</div>
+      <ul>
+        <li><strong>5 (Отлично):</strong> 90%+ баллов (270+ из 300)</li>
+        <li><strong>4 (Хорошо):</strong> 68-89% баллов (204-269 из 300)</li>
+        <li><strong>3 (Удовлетворительно):</strong> 51-67% баллов (153-203 из 300)</li>
+        <li><strong>2 (Нужно повторить):</strong> менее 51% (менее 153 баллов)</li>
+      </ul>
+    </div>
+    
+    <div class="footer">
+      Игра "Великая Депрессия: Советник Президента" | Создано для образовательных целей
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Инструкция_учителю_Великая_Депрессия.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const startGame = () => {
     setGameState('name-entry');
     setFadeIn(false);
@@ -272,6 +504,278 @@ function App() {
     return Math.round((totalScenesCompleted / scenes.length) * 100);
   };
 
+  const downloadResults = () => {
+    const { grade, label } = getOverallGrade();
+    const correctCount = choiceHistory.filter(c => c.choiceIndex === c.bestChoiceIndex).length;
+    const wrongCount = choiceHistory.filter(c => c.choiceIndex !== c.bestChoiceIndex).length;
+    
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результаты - ${studentName}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+    }
+    .container {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    h1 {
+      color: #fbbf24;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #9ca3af;
+      margin-bottom: 30px;
+    }
+    .grade-box {
+      background: rgba(251, 191, 36, 0.1);
+      border: 2px solid #fbbf24;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .grade {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fbbf24;
+    }
+    .grade-label {
+      font-size: 20px;
+      color: #e0e0e0;
+    }
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .score-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .score-value {
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .score-label {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .economy { color: #10b981; }
+    .trust { color: #3b82f6; }
+    .political { color: #8b5cf6; }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section-title {
+      color: #fbbf24;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .choice-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 3px solid;
+    }
+    .choice-correct {
+      border-left-color: #10b981;
+    }
+    .choice-wrong {
+      border-left-color: #ef4444;
+    }
+    .choice-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .choice-text {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .recommendation {
+      background: rgba(251, 191, 36, 0.05);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .recommendation-title {
+      color: #fbbf24;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .tips {
+      list-style: none;
+      padding: 0;
+    }
+    .tips li {
+      padding: 5px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .tips li:before {
+      content: "•";
+      color: #fbbf24;
+      position: absolute;
+      left: 0;
+    }
+    .footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏛️ Великая Депрессия: Советник Президента</h1>
+    <div class="subtitle">Результаты игры</div>
+    
+    <div class="grade-box">
+      <div class="grade">${grade}</div>
+      <div class="grade-label">${label}</div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">👤 Информация об ученике</div>
+      <div class="stat-row">
+        <span>Имя:</span>
+        <span><strong>${studentName}</strong></span>
+      </div>
+      <div class="stat-row">
+        <span>Класс:</span>
+        <span><strong>${className}</strong></span>
+      </div>
+      <div class="stat-row">
+        <span>Дата прохождения:</span>
+        <span><strong>${new Date().toLocaleString('ru-RU')}</strong></span>
+      </div>
+    </div>
+    
+    <div class="scores">
+      <div class="score-card">
+        <div class="score-value economy">${scores.economy}</div>
+        <div class="score-label">💰 Экономика</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value trust">${scores.trust}</div>
+        <div class="score-label">🤝 Доверие</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value political">${scores.political}</div>
+        <div class="score-label">🏛️ Политика</div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📊 Статистика</div>
+      <div class="stat-row">
+        <span>Общий балл:</span>
+        <span><strong>${scores.economy + scores.trust + scores.political}/300</strong></span>
+      </div>
+      <div class="stat-row">
+        <span>Пройдено сцен:</span>
+        <span><strong>${totalScenesCompleted}/${scenes.length}</strong></span>
+      </div>
+      <div class="stat-row">
+        <span>Правильных ответов:</span>
+        <span><strong>${correctCount}/${choiceHistory.length}</strong></span>
+      </div>
+      <div class="stat-row">
+        <span>Ошибок:</span>
+        <span><strong>${wrongCount}/${choiceHistory.length}</strong></span>
+      </div>
+    </div>
+    
+    ${Object.keys(miniGameResults).length > 0 ? `
+    <div class="section">
+      <div class="section-title">🎮 Мини-игры</div>
+      ${Object.entries(miniGameResults).map(([id, result]) => {
+        const mg = miniGames.find(m => m.id === id);
+        const percent = Math.round((result.score / result.max) * 100);
+        return `
+        <div class="stat-row">
+          <span>${mg?.title.replace(/[📅🔍🔗✏️✅]\s?/, '')}</span>
+          <span><strong>${result.score}/${result.max} (${percent}%)</strong></span>
+        </div>`;
+      }).join('')}
+    </div>
+    ` : ''}
+    
+    <div class="section">
+      <div class="section-title">📝 Детальные ответы</div>
+      ${choiceHistory.map((choice, idx) => {
+        const isCorrect = choice.choiceIndex === choice.bestChoiceIndex;
+        return `
+        <div class="choice-item ${isCorrect ? 'choice-correct' : 'choice-wrong'}">
+          <div class="choice-title">${idx + 1}. ${choice.sceneTitle}</div>
+          <div class="choice-text">${choice.choiceText.substring(0, 150)}...</div>
+          <div style="margin-top: 8px; font-size: 14px;">
+            ${isCorrect ? '<span style="color: #10b981;">✓ Правильно</span>' : '<span style="color: #ef4444;">✗ Ошибка</span>'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    
+    <div class="section">
+      <div class="section-title">💡 Рекомендации</div>
+      <div class="recommendation">
+        <div class="recommendation-title">${getRecommendation().title}</div>
+        <p>${getRecommendation().description}</p>
+        <ul class="tips">
+          ${getRecommendation().tips.map(tip => `<li>${tip}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Сгенерировано автоматически | Игра "Великая Депрессия: Советник Президента"
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Результаты_${studentName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const restartGame = () => {
     setGameState('start');
     setCurrentSceneIndex(0);
@@ -376,6 +880,12 @@ function App() {
               className="text-gray-500 hover:text-gray-300 text-sm transition-all"
             >
               🔐 Панель учителя
+            </button>
+            <button
+              onClick={downloadGame}
+              className="text-gray-500 hover:text-gray-300 text-sm transition-all"
+            >
+              📥 Скачать игру (HTML)
             </button>
             <p className="text-gray-600 text-xs">
               ⏱ Примерное время: 30-35 минут • 5 глав • 15 сцен • 5 мини-игр
@@ -740,6 +1250,12 @@ function App() {
           </div>
 
           <div className="space-y-3">
+            <button
+              onClick={downloadResults}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-[1.02]"
+            >
+              📥 Скачать результаты
+            </button>
             <button
               onClick={restartGame}
               className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-[1.02]"

@@ -1,14 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .font-serif {
-  font-family: 'Merriweather', serif;
+  font-family: Georgia, 'Times New Roman', Times, serif;
 }
 
 /* Custom scrollbar */
