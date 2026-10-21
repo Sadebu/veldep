@@ -64,88 +64,32 @@ function App() {
 
 
 
-  // Скачивание игры как ZIP-архива
-  const downloadGame = async () => {
+  // Скачивание игры как автономного HTML-файла
+  const downloadGame = () => {
     try {
-      const JSZip = (await import('jszip')).default;
-      const { saveAs } = await import('file-saver');
+      console.log('Скачиваем автономный HTML файл...');
       
-      const zip = new JSZip();
+      // Получаем текущий HTML документа (работает даже при открытии через file://)
+      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
       
-      // Загружаем index.html
-      const htmlResponse = await fetch(window.location.href);
-      const html = await htmlResponse.text();
-      zip.file('index.html', html);
+      console.log('HTML получен, размер:', html.length);
       
-      // Загружаем все CSS файлы
-      const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-      for (const link of styleLinks) {
-        try {
-          const href = (link as HTMLLinkElement).href;
-          const cssResponse = await fetch(href);
-          const css = await cssResponse.text();
-          const filename = href.split('/').pop() || 'style.css';
-          zip.file(`assets/${filename}`, css);
-        } catch (e) {
-          console.warn('Не удалось загрузить CSS:', link);
-        }
-      }
+      // Создаём Blob и скачиваем
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Великая_Депрессия_Игра.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       
-      // Загружаем все JS файлы
-      const scripts = Array.from(document.querySelectorAll('script[src]'));
-      for (const script of scripts) {
-        try {
-          const src = (script as HTMLScriptElement).src;
-          const jsResponse = await fetch(src);
-          const js = await jsResponse.text();
-          const filename = src.split('/').pop() || 'script.js';
-          zip.file(`assets/${filename}`, js);
-        } catch (e) {
-          console.warn('Не удалось загрузить JS:', script);
-        }
-      }
-      
-      // Создаём README с инструкцией
-      const readme = `# Великая Депрессия: Советник Президента
-
-## Как запустить игру локально:
-
-### Вариант 1: Простой запуск
-1. Откройте файл \`index.html\` в любом современном браузере (Chrome, Firefox, Edge, Safari)
-2. Игра запустится автоматически
-
-### Вариант 2: Локальный сервер (рекомендуется)
-1. Откройте терминал/командную строку в этой папке
-2. Запустите одну из команд:
-   - Python 3: \`python -m http.server 8000\`
-   - Python 2: \`python -m SimpleHTTPServer 8000\`
-   - Node.js: \`npx serve\`
-3. Откройте в браузере: \`http://localhost:8000\`
-
-## Требования:
-- Современный браузер с поддержкой JavaScript
-- Интернет не требуется (все ресурсы включены в архив)
-
-## Панель учителя:
-- Нажмите "🔐 Панель учителя" на главном экране
-- Пароль: teacher1933
-
-## Результаты учеников:
-- Результаты сохраняются в localStorage браузера
-- Ученики могут скачать результаты в HTML формате
-- Учитель может просмотреть все результаты в панели учителя
-
----
-Создано для образовательных целей
-`;
-      zip.file('README.md', readme);
-      
-      // Генерируем ZIP
-      const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, 'Великая_Депрессия_Игра.zip');
+      console.log('Файл сохранён');
     } catch (error) {
       console.error('Ошибка при скачивании:', error);
-      alert('Не удалось скачать игру. Попробуйте обновить страницу и повторить попытку.');
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      alert('Не удалось скачать игру. Ошибка: ' + errorMessage + '\n\nОткройте консоль браузера (F12) для подробностей.');
     }
   };
 
@@ -486,7 +430,7 @@ function App() {
           
           <div className="mt-6 flex flex-col items-center gap-2">
             <button onClick={() => setGameState('teacher')} className="text-gray-500 hover:text-gray-300 text-sm transition-all">🔐 Панель учителя</button>
-            <button onClick={downloadGame} className="text-gray-500 hover:text-gray-300 text-sm transition-all">📥 Скачать игру (ZIP-архив)</button>
+            <button onClick={downloadGame} className="text-gray-500 hover:text-gray-300 text-sm transition-all">📥 Скачать игру (HTML)</button>
             <p className="text-gray-600 text-xs">⏱ Примерное время: 30-35 минут • 5 глав • 15 сцен • 5 мини-игр</p>
           </div>
         </div>
