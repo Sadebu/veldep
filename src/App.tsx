@@ -245,27 +245,26 @@ function App() {
     localStorage.setItem('game_student_results', JSON.stringify(results));
   };
 
-  // === STRICT GRADING SYSTEM ===
-  // Строгая система оценивания
-  // Старт: 40/40/40 = 120 баллов
+  // === GRADING SYSTEM ===
+  // Старт: 40/40/40 = 120 баллов (40%)
   // Максимум: 100/100/100 = 300 баллов
   const getOverallGrade = () => {
     const totalScore = scores.economy + scores.trust + scores.political;
     const percent = (totalScore / 300) * 100;
     
-    if (percent >= 87) return { grade: '5', label: 'Отлично' };      // 261+
-    if (percent >= 77) return { grade: '4', label: 'Хорошо' };       // 231+
-    if (percent >= 65) return { grade: '3', label: 'Удовлетворительно' }; // 195+
-    return { grade: '2', label: 'Нужно повторить' };                 // <195
+    if (percent >= 90) return { grade: '5', label: 'Отлично' };      // 270+
+    if (percent >= 68) return { grade: '4', label: 'Хорошо' };       // 204+
+    if (percent >= 51) return { grade: '3', label: 'Удовлетворительно' }; // 153+
+    return { grade: '2', label: 'Нужно повторить' };                 // <153
   };
 
   const getRecommendation = () => {
     const totalScore = scores.economy + scores.trust + scores.political;
     const percent = (totalScore / 300) * 100;
     
-    if (percent >= 87) return recommendations.excellent;
-    if (percent >= 77) return recommendations.good;
-    if (percent >= 65) return recommendations.average;
+    if (percent >= 90) return recommendations.excellent;
+    if (percent >= 68) return recommendations.good;
+    if (percent >= 51) return recommendations.average;
     return recommendations.needsWork;
   };
 
