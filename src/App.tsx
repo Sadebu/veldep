@@ -37,7 +37,7 @@ function App() {
   const [gameState, setGameState] = useState<GameState>('start');
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
   const [currentChapter, setCurrentChapter] = useState(1);
-  const [scores, setScores] = useState<Scores>({ economy: 50, trust: 50, political: 50 });
+  const [scores, setScores] = useState<Scores>({ economy: 40, trust: 40, political: 40 });
   const [lastChoice, setLastChoice] = useState<Choice | null>(null);
   const [lastChoiceIndex, setLastChoiceIndex] = useState<number>(0);
   const [fadeIn, setFadeIn] = useState(false);
@@ -109,15 +109,17 @@ function App() {
     setLastChoice(choice);
     setLastChoiceIndex(choiceIndex);
     
-    // Apply effects with scaling based on current score (harder to max out)
+    // Apply effects with STRICT scaling
     const scaleEffect = (value: number, currentScore: number) => {
-      // Чем выше текущий балл, тем сложнее его повысить (и легче потерять)
+      // Чем выше текущий балл, тем сложнее его повысить
       if (value > 0) {
-        const multiplier = 1 - (currentScore - 50) / 150; // от 1.0 до 0.33
-        return Math.round(value * Math.max(0.4, multiplier));
+        // Множитель уменьшается: при 40 = 1.0, при 100 = 0.2
+        const multiplier = 1 - (currentScore - 40) / 100;
+        return Math.round(value * Math.max(0.25, multiplier));
       } else {
-        const multiplier = 1 + (currentScore - 50) / 200; // штрафы сильнее при высоком балле
-        return Math.round(value * multiplier);
+        // Штрафы усиливаются при высоком балле
+        const multiplier = 1 + (currentScore - 40) / 120;
+        return Math.round(value * Math.min(2.0, multiplier));
       }
     };
 
@@ -190,12 +192,13 @@ function App() {
       setCompletedMiniGames(prev => [...prev, currentMiniGame.id]);
       setMiniGameResults(prev => ({ ...prev, [currentMiniGame.id]: { score, max: maxScore } }));
       
-      // Mini-game effects — более сбалансированные
+      // Mini-game effects — строгие
       const ratio = score / maxScore;
       let bonus: number;
-      if (ratio >= 0.9) bonus = 5;
-      else if (ratio >= 0.7) bonus = 3;
-      else if (ratio >= 0.5) bonus = 1;
+      if (ratio >= 0.95) bonus = 3;
+      else if (ratio >= 0.8) bonus = 2;
+      else if (ratio >= 0.6) bonus = 1;
+      else if (ratio >= 0.4) bonus = 0;
       else bonus = -2;
 
       setScores(prev => ({
@@ -242,27 +245,27 @@ function App() {
     localStorage.setItem('game_student_results', JSON.stringify(results));
   };
 
-  // === NEW GRADING SYSTEM ===
-  // Более строгая система оценивания
+  // === STRICT GRADING SYSTEM ===
+  // Строгая система оценивания
+  // Старт: 40/40/40 = 120 баллов
+  // Максимум: 100/100/100 = 300 баллов
   const getOverallGrade = () => {
     const totalScore = scores.economy + scores.trust + scores.political;
-    // Максимум 300 (100+100+100), старт 150 (50+50+50)
-    // Процент от максимума:
     const percent = (totalScore / 300) * 100;
     
-    if (percent >= 80) return { grade: '5', label: 'Отлично' };      // 240+
-    if (percent >= 68) return { grade: '4', label: 'Хорошо' };       // 204+
-    if (percent >= 55) return { grade: '3', label: 'Удовлетворительно' }; // 165+
-    return { grade: '2', label: 'Нужно повторить' };
+    if (percent >= 87) return { grade: '5', label: 'Отлично' };      // 261+
+    if (percent >= 77) return { grade: '4', label: 'Хорошо' };       // 231+
+    if (percent >= 65) return { grade: '3', label: 'Удовлетворительно' }; // 195+
+    return { grade: '2', label: 'Нужно повторить' };                 // <195
   };
 
   const getRecommendation = () => {
     const totalScore = scores.economy + scores.trust + scores.political;
     const percent = (totalScore / 300) * 100;
     
-    if (percent >= 80) return recommendations.excellent;
-    if (percent >= 68) return recommendations.good;
-    if (percent >= 55) return recommendations.average;
+    if (percent >= 87) return recommendations.excellent;
+    if (percent >= 77) return recommendations.good;
+    if (percent >= 65) return recommendations.average;
     return recommendations.needsWork;
   };
 
@@ -274,7 +277,7 @@ function App() {
     setGameState('start');
     setCurrentSceneIndex(0);
     setCurrentChapter(1);
-    setScores({ economy: 50, trust: 50, political: 50 });
+    setScores({ economy: 40, trust: 40, political: 40 });
     setLastChoice(null);
     setLastChoiceIndex(0);
     setTotalScenesCompleted(0);
@@ -361,7 +364,7 @@ function App() {
                 🎮 Между главами вас ждут мини-игры на проверку знаний — они тоже влияют на прогресс!
               </p>
               <p className="text-gray-500 text-xs mt-1">
-                ⚖️ Система оценивания строгая: чтобы получить «5», нужно набрать 80%+ от максимума по всем шкалам.
+                ⚖️ Система оценивания очень строгая: «5» — только 87%+ баллов, «4» — 77%+, «3» — 65%+. Ошибки сильно снижают балл!
               </p>
             </div>
           </div>
