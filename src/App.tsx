@@ -64,32 +64,31 @@ function App() {
 
 
   // Скачивание игры как автономного HTML-файла
-  const downloadGame = async () => {
+  const downloadGame = () => {
     try {
       console.log('Скачиваем автономный HTML файл...');
       
-      // Пытаемся загрузить оригинальный HTML файл через fetch
-      let html: string;
+      // Берём сохранённый оригинальный HTML (сохранён в main.tsx до рендеринга React)
+      const originalHtml = (window as any).__ORIGINAL_HTML__;
       
-      try {
-        const response = await fetch(window.location.href, {
-          cache: 'no-cache',
-          headers: {
-            'Accept': 'text/html'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        html = await response.text();
-        console.log('HTML загружен через fetch, размер:', html.length);
-      } catch (fetchError) {
-        console.warn('Не удалось загрузить через fetch, используем DOM:', fetchError);
-        // Если fetch не работает (например, file:// протокол), используем DOM
-        html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      if (!originalHtml) {
+        throw new Error('Оригинальный HTML не найден. Попробуйте обновить страницу.');
       }
+      
+      console.log('Размер оригинального HTML:', originalHtml.length);
+      
+      // Берём сохранённый оригинальный HTML и очищаем #root
+      // чтобы при повторном открытии React мог заново отрендерить
+      let html = '<!DOCTYPE html>\n' + originalHtml;
+      
+      // Заменяем содержимое #root на пустой div
+      // (React уже отрендерил туда контент, но нам нужен чистый HTML)
+      html = html.replace(
+        /<div id="root">[\s\S]*?<\/div>\s*<\/body>/,
+        '<div id="root"></div></body>'
+      );
+      
+      console.log('Размер после очистки:', html.length);
       
       // Создаём Blob и скачиваем
       const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
